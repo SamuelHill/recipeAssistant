@@ -2,7 +2,7 @@
 
 ## TO-DO
 
-1. Speech (commands and utterances):
+1. Speech (commands and utterances): [Wesley]
 	- continuously gather speech
 		* there is a streaming limit so test for length of stream allowed, if needed switch to the async version of google speech
 	- only output text heard from user (ignore tts output)
