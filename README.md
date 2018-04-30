@@ -49,6 +49,7 @@
 	- pip install pyttsx3
 		* https://pyttsx3.readthedocs.io/en/latest/
 	- pip install gtts
+		* brew install mpg321
 
 [auth code console](https://console.cloud.google.com/apis/credentials?project=turnkey-lacing-201318)
 
