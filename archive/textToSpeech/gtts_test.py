@@ -1,5 +1,3 @@
-# brew install mpg321
-
 # Import the required module for text 
 # to speech conversion
 from gtts import gTTS

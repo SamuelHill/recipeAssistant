@@ -13,10 +13,10 @@
 		* recipe list
 		* "text entry" - what was heard
 		* results (text from tts and other output)
-3. Data:
+3. Data: [Sam]
 	- yummly (python library)
 	- bigoven api (meh...)
-4. Context:
+4. Context: [Sam]
 	- convert recipes to some sort of finite state machine...
 	- work on representation of world state...
 5. QA:
@@ -33,17 +33,23 @@
 + [General python speech recognition](https://pypi.python.org/pypi/SpeechRecognition/)
 	- pip install [pyaudio](https://people.csail.mit.edu/hubert/pyaudio/)
 		* (and portaudio for mac)
+		* [common error](https://l.facebook.com/l.php?u=https%3A%2F%2Fstackoverflow.com%2Fquestions%2F5921947%2Fpyaudio-installation-error-command-gcc-failed-with-exit-status-1&h=ATMRQvGccZ6Za0AJJjBxUhYyV5Wa4T1baVKuBF2uidoBgARUENxhpP_wbn9DgwlnKLx9xBnT_2tp3DPL9ecQPMtHAGq4KsACp1UDCBsbXAtFHQTLzZKY31tF)
 	- pip install pocketsphinx
-	- pip install speech_recognition
+	- pip install SpeechRecognition
 + [Google Cloud Services python env](https://cloud.google.com/python/setup)
 	- download python2 and pip (python 3 isn't fully supported...)
-		* Note: Google Cloud SDK itself is written in Python. Regardless of which version of Python you use to develop your applications, the Google Cloud SDK requires Python 2.7.9 or later and does not currently work on Python 3. This should not affect your applications; even if you're using a Python 3 virtualenv, the Google Cloud SDK should be able to find and use your Python 2 installation.
-	- don't create a virtual environment
+		* the Google Cloud SDK requires Python 2.7.9 or later and does not currently work on Python 3.
+		* Not needed unless you don't have python 2.
+	- don't create a virtual environment (pyaudio doesn't work with it)
 	- install the [google cloud sdk](https://cloud.google.com/sdk)
+		* ./google-cloud-sdk/install.sh OR .\google-cloud-sdk\install.bat
+		* ./google-cloud-sdk/bin/gcloud init
 	- pip install google-cloud-speech
 + Text to Speech
 	- pip install pyttsx3
+		* https://pyttsx3.readthedocs.io/en/latest/
 	- pip install gtts
+		* brew install mpg321
 
 [auth code console](https://console.cloud.google.com/apis/credentials?project=turnkey-lacing-201318)
 
