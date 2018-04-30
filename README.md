@@ -2,12 +2,12 @@
 
 ## TO-DO
 
-1. Speech (commands and utterances):
+1. Speech (commands and utterances): [Wesley]
 	- continuously gather speech
 		* there is a streaming limit so test for length of stream allowed, if needed switch to the async version of google speech
 	- only output text heard from user (ignore tts output)
 	- clean up functions to only output a string of text for what was recognized, once per cycle (command response cycle)
-2. UI:
+2. UI: [Nneoma]
 	- get setup with tKinter, make basic application window.
 		* ingredients list
 		* recipe list
