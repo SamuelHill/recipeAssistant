@@ -39,11 +39,14 @@
 + [Google Cloud Services python env](https://cloud.google.com/python/setup)
 	- download python2 and pip (python 3 isn't fully supported...)
 		* Note: Google Cloud SDK itself is written in Python. Regardless of which version of Python you use to develop your applications, the Google Cloud SDK requires Python 2.7.9 or later and does not currently work on Python 3. This should not affect your applications; even if you're using a Python 3 virtualenv, the Google Cloud SDK should be able to find and use your Python 2 installation.
-	- don't create a virtual environment
+		* Not needed unless you don't have python 2.
+	- don't create a virtual environment (pyaudio doesn't work with it)
 	- install the [google cloud sdk](https://cloud.google.com/sdk)
+		* install.sh
 	- pip install google-cloud-speech
 + Text to Speech
 	- pip install pyttsx3
+		* https://pyttsx3.readthedocs.io/en/latest/
 	- pip install gtts
 
 [auth code console](https://console.cloud.google.com/apis/credentials?project=turnkey-lacing-201318)
