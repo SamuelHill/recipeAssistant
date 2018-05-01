@@ -45,6 +45,7 @@
 		* ./google-cloud-sdk/install.sh OR .\google-cloud-sdk\install.bat
 		* ./google-cloud-sdk/bin/gcloud init
 	- pip install google-cloud-speech
+	- [more info](https://google-cloud-python.readthedocs.io/en/latest/speech/index.html)
 + Text to Speech
 	- pip install pyttsx3
 		* https://pyttsx3.readthedocs.io/en/latest/
