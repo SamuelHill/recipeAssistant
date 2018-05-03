@@ -8,6 +8,9 @@ from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 from MicrophoneStream import MicrophoneStream
+from speech_functions import process_speech
+from speech_functions import remove_spaces
+
 import subprocess
 
 # Audio recording parameters
@@ -30,6 +33,7 @@ def listen_print_loop(responses):
         if not result.alternatives:
             continue
         transcript = result.alternatives[0].transcript
+        process_speech(remove_spaces(transcript))
         overwrite_chars = ' ' * (num_chars_printed - len(transcript))
         if not result.is_final:
             sys.stdout.write(transcript + overwrite_chars + '\r')
@@ -37,6 +41,7 @@ def listen_print_loop(responses):
             num_chars_printed = len(transcript)
         else:
             print(transcript + overwrite_chars)
+
             if re.search(r'\b(exit|quit)\b', transcript, re.I):
                 print('Exiting..')
                 break
@@ -44,7 +49,7 @@ def listen_print_loop(responses):
             speaker = gTTS(text=simple_recipe.pop(0), lang='en', slow=False)
             speaker.save(CWD + "/gtts_speech.mp3")
             os.system("mpg321 -q " + CWD + "/gtts_speech.mp3")
-            # time.sleep(5)
+            time.sleep(5)
             # END OF FINAL ACTION
             num_chars_printed = 0
 
