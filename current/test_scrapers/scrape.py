@@ -1,15 +1,16 @@
 import re
-from fractions import Fraction
 from recipe_scrapers import scrape_me  # https://github.com/hhursev/recipe-scrapers
 
 # give the url as a string, it can be url from any site listed below
 scrape = scrape_me('https://www.allrecipes.com/recipe/213262/sweet-and-savory-slow-cooker-pulled-pork/?internalSource=similar_recipe_banner&referringId=139603&referringContentType=recipe&clickId=simslot_2')
 
-# print scrape.title()
-# print 'Time: ' + str(scrape.total_time())
+print scrape.title() + '\n'
+print 'Time: ' + str(scrape.total_time()) + '\n'
 
+print " # INSTRUCTIONS # "
 instructions = [i for i in scrape.instructions().split('\n') if i is not '']
-# print instructions
+for instruction in instructions:
+	print instruction
 
 unit_types = dict()
 # METRIC (volume, weight)
@@ -65,14 +66,18 @@ def findParen(string):
 
 def transformDigits(digits):
 	if len(digits) == 3:
-		return digits[0] + ' ' + digits[1] + '/' + digits[2]
+		quantity = digits[0] + ' ' + digits[1] + '/' + digits[2]
+		qty_value = float(digits[0]) + (float(digits[1]) / float(digits[2]))
+		return quantity, qty_value
 	elif len(digits) == 2:
-		return digits[0] + '/' + digits[1]
+		quantity = digits[0] + '/' + digits[1]
+		qty_value = float(digits[0]) / float(digits[1])
+		return quantity, qty_value
 	elif len(digits) == 1:
-		return str(digits[0])
-	return None
+		return str(digits[0]), float(digits[0])
+	return None, None
 
-def findUnit(quantity, string):
+def findUnit(quantity, qty_value, string):
 	words = string.split()
 	unit = None
 	if ' ' in quantity:
@@ -87,15 +92,12 @@ def findUnit(quantity, string):
 	if unit in abbrevs:
 		for real, abbrev in unit_types.iteritems():    # for name, age in list.items():  (for Python 3.x)
 		    if unit in abbrev:
-		        unit = pluralize(quantity, real)
+		        unit = pluralize(qty_value, real)
 		return unit, removeToken(removeToken(string, unit), quantity)
 	return None, removeToken(string, quantity)
 
 def pluralize(quantity, string):
-	print repr(quantity)
-	if ' ' in quantity:  # assume quantity with space greater than one
-		return string + 's'
-	elif float(quantity) > 1.0:
+	if float(quantity) > 1.0:
 		if string == 'foot':
 			return 'feet'
 		return string + 's'
@@ -109,10 +111,18 @@ raw_ingredients = []
 for ingredient in scrape.ingredients():
 	original = ingredient
 	paren, ingredient = findParen(ingredient)
-	quantity = transformDigits(re.findall('\d+', ingredient))
-	unit, ingredient = findUnit(quantity, ingredient)
-	raw_ingredients.append([quantity, unit, ingredient, paren])
+	quantity, qty_value = transformDigits(re.findall('\d+', ingredient))
+	unit, ingredient = findUnit(quantity, qty_value, ingredient)
+	raw_ingredients.append([quantity, qty_value, unit, ingredient, paren])
 
-# print raw_ingredients
+print "\n # INGREDIENTS # "
+# for ingredient in raw_ingredients:
+# 	print ingredient
+
+s = [[str(e) for e in row] for row in raw_ingredients]
+lens = [max(map(len, col)) for col in zip(*s)]
+fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
+table = [fmt.format(*row) for row in s]
+print '\n'.join(table)
 
 # print scrape.links()
