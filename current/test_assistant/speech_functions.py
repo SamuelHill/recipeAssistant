@@ -1,3 +1,14 @@
+from __future__ import division
+from gtts import gTTS
+import re
+import sys
+import os
+import time
+from google.cloud import speech
+from google.cloud.speech import enums
+from google.cloud.speech import types
+from MicrophoneStream import MicrophoneStream
+
 next_array = ["next", "nex", "nexts", "next step", "then", "go on", "whats next", "continue", "more", "forward"]
 previous_array = ["previous", "back", "backwards", "backward", "last step", "prior", "previous step"]
 repeat_array = ["again", "repeat", "say again", "say it again", "one more time"]
@@ -14,33 +25,35 @@ RecipeIndex - Current Index
 
 
 
-def remove_spaces(str):
-    return str.strip()
+def remove_spaces(input_text):
+    return input_text.strip()
 
 def process_speech(speech):
-    if speech in next_array:
-        next_step()
-    elif speech in previous_array:
-        previous_step()
-    elif speech in repeat_array:
-        repeat()
+    speech = set(speech)
+    if speech & set(next_array):
+        return next_step()
+    elif speech & set(previous_array):
+        return previous_step()
+    elif speech & set(repeat_array):
+        return repeat()
     elif detect_quantity(speech):
-        quantity()
+        return quantity()
+
 
 def next_step(self=None):
-    print("Moving to next step...")
+    return "Moving to next step..."
     # self.recipe_index += self.recipe_index + 1
     # return self.recipe_array[self.recipe_index]
 
 
 
 def previous_step(self=None):
-    print("Moving to previous step...")
+    return "Moving to previous step..."
     # self.recipe_index += self.recipe_index - 1
     # return self.recipe_array[self.recipe_index]
 
 def repeat(self=None):
-    print("Moving to previous step...")
+    return "Moving to previous step..."
     # return self.recipe_array[self.recipe_index]
 
 def detect_quantity(str):
@@ -50,6 +63,6 @@ def detect_quantity(str):
     return False
 
 def quantity(self=None):
-    print("Getting quantity")
+    return "Getting quantity"
 
 
