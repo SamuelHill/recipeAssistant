@@ -5,7 +5,6 @@ from scrape import *
 ## TODO:
     # button in input box to serve as temporary wakeword for demo
     # wrap current speech_to_text, call it upon clicking the button
-    # wrap recipe parser and extract info for ingredients and recipe boxes
     # make a fxn that uses stt to call upon a couple of built-in recipes and display them
 
 # scrape.scrapeRecipe('https://www.allrecipes.com/recipe/213262/sweet-and-savory-slow-cooker-pulled-pork/?internalSource=similar_recipe_banner&referringId=139603&referringContentType=recipe&clickId=simslot_2')
