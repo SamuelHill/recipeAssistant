@@ -1,7 +1,8 @@
-# if __name__ == "__main__": # fixing importing issues
+# if __name__ == "__main__": # attempting to fix importing issues
 import re
 from recipe_scrapers import scrape_me  # https://github.com/hhursev/recipe-scrapers
 
+# def __main__:
 def scrapeRecipe(url):
 	# give the url as a string, it can be url from any site listed below
 	scrape = scrape_me(url)
@@ -59,6 +60,8 @@ def scrapeRecipe(url):
 	unit_types['foot']       = ['foot','\'','feet']
 	# ALL ABBREVIATIONS
 	abbrevs = [abbrev for abbrevs in unit_types.values() for abbrev in abbrevs]
+
+	# TODO: finding fractions seems to have issues on other recipes, but good for the demo rn
 
 	def findParen(string):
 		if string.find("(") != -1 and string.find(")") != -1:
@@ -119,8 +122,6 @@ def scrapeRecipe(url):
 		raw_ingredients.append([quantity, qty_value, unit, ingredient, paren])
 
 	print "\n # INGREDIENTS # "
-	# for ingredient in raw_ingredients:
-	# 	print ingredient
 
 	s = [[str(e) for e in row] for row in raw_ingredients]
 	lens = [max(map(len, col)) for col in zip(*s)]
