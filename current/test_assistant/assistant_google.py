@@ -46,10 +46,11 @@ def listen_print_loop(responses):
                 print('Exiting..')
                 break
             # DO FINAL ACTION HERE
-            speaker = gTTS(text=simple_recipe.pop(0), lang='en', slow=False)
-            speaker.save(CWD + "/gtts_speech.mp3")
-            os.system("mpg321 -q " + CWD + "/gtts_speech.mp3")
-            time.sleep(5)
+            if re.match(r'\b(hello)\b', transcript, re.I):
+                speaker = gTTS(text=simple_recipe.pop(0), lang='en', slow=False)
+                speaker.save(CWD + "/gtts_speech.mp3")
+                os.system("mpg321 -q " + CWD + "/gtts_speech.mp3")
+            # time.sleep(5)
             # END OF FINAL ACTION
             num_chars_printed = 0
 
