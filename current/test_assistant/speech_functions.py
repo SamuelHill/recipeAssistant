@@ -1,4 +1,4 @@
-next_array = ["next", "nex", "nexts", "next step", "then", "go on", "whats next", "continue", "more", "forward"]
+next_array = ["next", "nex", "nexts", "next step", "then", "go on", "whats next", "continue", "more", "forward", "text"]
 previous_array = ["previous", "back", "backwards", "backward", "last step", "prior", "previous step"]
 repeat_array = ["again", "repeat", "say again", "say it again", "one more time"]
 quantity_array = ["how much", "how many"]
@@ -9,7 +9,7 @@ Data is envisioned as
 
 RecipeArray[] - Array of Steps
 RecipeIndex - Current Index
-
+Ingredients - Array of ingredient objects
 """
 
 
@@ -25,7 +25,9 @@ def process_speech(speech):
     elif speech in repeat_array:
         repeat()
     elif detect_quantity(speech):
-        quantity()
+        match_ingredients(speech)
+    # else:
+    #     print("Sorry, I didn't understand.")
 
 def next_step(self=None):
     print("Moving to next step...")
@@ -49,7 +51,12 @@ def detect_quantity(str):
             return True
     return False
 
-def quantity(self=None):
-    print("Getting quantity")
+
+
+def match_ingredients(str, self=None):
+    for i in self.ingredients:
+        if i in str:
+            return self.ingredients[i].quantity
+    return False
 
 
