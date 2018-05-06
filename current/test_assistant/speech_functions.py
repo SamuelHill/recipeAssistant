@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-next_array = ["next", "nex", "nexts", "next step", "then", "go on", "whats next", "continue", "more", "forward", "text"]
-=======
 from __future__ import division
 from gtts import gTTS
 import re
@@ -12,8 +9,8 @@ from google.cloud.speech import enums
 from google.cloud.speech import types
 from MicrophoneStream import MicrophoneStream
 
-next_array = ["next", "nex", "nexts", "next step", "then", "go on", "whats next", "continue", "more", "forward"]
->>>>>>> 6ec97e48fd672e20427c65584b68ff62e8d34aab
+next_array = ["next", "nex", "nexts", "next step", "then", "go on", "whats next", "continue", "more", "forward", "text"]
+
 previous_array = ["previous", "back", "backwards", "backward", "last step", "prior", "previous step"]
 repeat_array = ["again", "repeat", "say again", "say it again", "one more time"]
 quantity_array = ["how much", "how many"]
@@ -41,14 +38,11 @@ def process_speech(speech):
     elif speech & set(repeat_array):
         return repeat()
     elif detect_quantity(speech):
-<<<<<<< HEAD
         match_ingredients(speech)
     # else:
     #     print("Sorry, I didn't understand.")
-=======
-        return quantity()
 
->>>>>>> 6ec97e48fd672e20427c65584b68ff62e8d34aab
+
 
 def next_step(self=None):
     return "Moving to next step..."
@@ -72,17 +66,13 @@ def detect_quantity(str):
             return True
     return False
 
-<<<<<<< HEAD
-
 
 def match_ingredients(str, self=None):
     for i in self.ingredients:
         if i in str:
             return self.ingredients[i].quantity
     return False
-=======
-def quantity(self=None):
-    return "Getting quantity"
->>>>>>> 6ec97e48fd672e20427c65584b68ff62e8d34aab
+
+
 
 
