@@ -1,0 +1,15 @@
+bucatini
+capellini
+spaghetti
+fettuccine
+linguine
+stringozzi
+tagliatelle
+fusilli
+maccheroni
+penne
+rigatoni
+tortiglioni
+farfalle
+gnocchi
+cannelloni
