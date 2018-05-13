@@ -1,0 +1,25 @@
+bake
+barbecue
+barbeque
+boil
+braise
+broil
+combine
+cook
+freeze
+fry
+grill
+heat
+microwave
+mix
+poach
+saute
+sauté
+smoke
+steam
+stir
+stir fry
+stir-fry
+toss
+warm
+wok
