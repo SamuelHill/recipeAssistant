@@ -3,10 +3,13 @@
 ## TO-DO
 
 1. UI:
-	- integrate
+	- test to verify audio is still real time
 1. QA:
-	- basic step info (how much, how to)
-	- 2nd level/recursion ]-> how much of this, what about that
+	- basic step info 
+		+ how much (done)
+		+ how to
+		+ what can I use instead
+	- 2nd level/recursion -> how much of this, what about that
 
 ## SETUP
 
