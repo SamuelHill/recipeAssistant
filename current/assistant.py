@@ -1,14 +1,15 @@
 from __future__ import division
-from six.moves import queue
-import os
-from pyaudio import PyAudio, paContinue, paInt16
 from abc import ABCMeta, abstractmethod
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 from gtts import gTTS
+from pyaudio import PyAudio, paContinue, paInt16
 from recipe_scrapers import scrape_me
-# import time
+from six.moves import queue
+from Tkinter import *
+import os
+# import re
 
 
 def real_dirname():
@@ -134,95 +135,8 @@ class Listening(ABCMeta('ABC', (), {})):
             if lazy_regex_search(wake_word, transcript):
                 if result.is_final:
                     self.process_speech(transcript)
-                    if lazy_regex_search('STOP', transcript):  # ask gordon to stop
+                    if lazy_regex_search('QUIT', transcript):  # ask to quit
                         break
-
-
-class Assistant(Listening):
-    START_EXAMPLES = ['LETS GET STARTED', 'START']
-    NEXT_EXAMPLES = ['NEXT', 'NEX', 'NEXTS', 'NEXT STEP', 'THEN', 'GO ON',
-                     'WHATS NEXT', 'CONTINUE', 'MORE', 'FORWARD', 'TEXT']
-    PREV_EXAMPLES = ['PREVIOUS', 'GO BACK', 'GO BACKWARDS', 'GO BACKWARD',
-                     'LAST STEP', 'PRIOR', 'PREVIOUS STEP']
-    REPEAT_EXAMPLES = ['AGAIN', 'REPEAT', 'SAY AGAIN', 'SAY IT AGAIN',
-                       'ONE MORE TIME']
-    QUANTITY_EXAMPLES = ['HOW MUCH', 'HOW MANY']
-
-
-    def __init__(self, instructions = [], ingredients = [], current_step = 0, recipe_name = ''):
-        super(Assistant, self).__init__()
-        self.title = 'Banana Poppy Seed Pancakes'
-        self.instructions = ['Whisk whole wheat flour, all-purpose flour, baking powder, poppy seeds, and salt together in a bowl.',
-                             'Beat eggs in a large bowl. Add milk, bananas, coconut oil, honey, and vanilla extract; whisk together. Pour in flour mixture and stir until just combined.',
-                             'Preheat a lightly oiled griddle on medium-low heat. Ladle batter 1/4 cup at a time onto the prepared griddle, sprinkling a few blueberries over each pancake. Cook until bubbles start to appear and edges are dry, about 3 minutes. Flip and cook until other side is browned, about 2 minutes.]']
-        self.ingredients = ['1 cup whole wheat flour', '1 cup all-purpose flour',
-                            '4 teaspoons baking powder', '2 teaspoons poppy seeds',
-                            '1 teaspoon salt', '2 eggs', '2 cups milk', '2 ripe bananas, mashed',
-                            'quarter cup coconut oil, melted', '2 tablespoons honey',
-                            '1 teaspoon vanilla extract', 'half cup fresh blueberries']
-        self.current_step = 0
-
-
-    @staticmethod
-    def check_examples(transcript, examples):
-        found = False
-        for example in examples:
-            if lazy_regex_search(example, transcript):
-                found = True
-                break
-        return found
-
-
-    def process_speech(self, transcript):
-        if self.check_examples(transcript, Assistant.START_EXAMPLES):
-            self.speak(self.start_cooking())
-        elif self.check_examples(transcript, Assistant.NEXT_EXAMPLES):
-            self.speak(self.next_step())
-        elif self.check_examples(transcript, Assistant.PREV_EXAMPLES):
-            self.speak(self.previous_step())
-        elif self.check_examples(transcript, Assistant.REPEAT_EXAMPLES):
-            self.speak(self.repeat())
-        elif self.check_examples(transcript, Assistant.QUANTITY_EXAMPLES):
-            self.speak(self.match_ingredients(transcript))
-        else:
-            self.speak('Sorry, I didn\'t understand.')
-
-
-    @staticmethod
-    def speak(text):
-        speaker = gTTS(text = text, lang = 'en', slow = False)
-        speaker.save(real_dirname() + '/tmp.mp3')
-        os.system('mpg321 -q ' + real_dirname() + '/tmp.mp3')
-
-
-    def start_cooking(self):
-        self.current_step = 0
-        text = 'Today we will be cooking ' + self.title + '. '
-        # text += 'The ingredients are ' + ', '.join(self.ingredients) + '.'
-        text += 'To start, ' + self.instructions[self.current_step]
-        return text
-
-
-    def next_step(self):
-        self.current_step += 1
-        return self.instructions[self.current_step]
-
-
-    def previous_step(self):
-        self.current_step -= 1
-        return self.instructions[self.current_step]
-
-
-    def repeat(self):
-        return self.instructions[self.current_step]
-
-
-    # @staticmethod
-    # def match_ingredients(transcript, ingredients):
-    #     for ingredient in ingredients:
-    #         if lazy_regex_search(ingredient.name.upper(), transcript): 
-    #             return ingredient.quantity
-    #     return False
 
 
 class Recipe(object):
@@ -253,13 +167,16 @@ class Recipe(object):
     unit_types['teaspoon']     = ['teaspoon','t','tsp','teaspoons','tsps']
     unit_types['tablespoon']   = ['tablespoon','T','tbl','tbs','tbsp',
                                   'tablespoons','tbls','tbsps']
-    unit_types['fluid ounce']  = ['fluid ounce','fl oz','fluid ounces','fl ozs']
+    unit_types['fluid ounce']  = ['fluid ounce','fl oz','fluid ounces',
+                                  'fl ozs']
     unit_types['wineglass']    = ['wineglass','wgf','wineglasses','wgfs']
     unit_types['gill']         = ['gill','teacup','gills','teacups']
     unit_types['pottle']       = ['pottle','pot','pottles','pots']
     unit_types['cup']          = ['cup','c','cups']
-    unit_types['pint']         = ['pint','p','pt','fl pt','pints','pts','fl pts']
-    unit_types['quart']        = ['quart','q','qt','fl qt','quarts','qts','fl qts']
+    unit_types['pint']         = ['pint','p','pt','fl pt','pints','pts',
+                                  'fl pts']
+    unit_types['quart']        = ['quart','q','qt','fl qt','quarts','qts'
+                                  'fl qts']
     unit_types['gallon']       = ['gallon','g','gal','gallons','gals']
     unit_types['pound']        = ['pound','lb','pounds','lbs']
     unit_types['ounce']        = ['ounce','oz','ounces','ozs']
@@ -274,21 +191,38 @@ class Recipe(object):
     abbrevs = [abbrev for abbrevs in unit_types.values()
                                    for abbrev in abbrevs]
 
-    def __init__(self, url = '', title = '', time = '',
-                 instructions = [], ingredients = []):
+    def __init__(self, url, *args, **kwargs):
         self.url = url
-        if title == '':
-            title, time, instructions, ingredients = self.parse()
+        title, time, instructions, ingredients = self.parse()
         self.title = title
         self.time = time
         self.instructions = instructions
         self.ingredients = ingredients
+        # self.title = kwargs.get('title',random_holes())
 
 
-    # def __str__():
-    #     temp = self.title + '\n'
-    #     temp += 'Time: ' + str(self.time) + '\n'
-    #     temp += ' # INSTRUCTIONS # \n'
+    def __str__(self):
+        temp = self.title + '\n'
+        temp += 'Time: ' + str(self.time) + '\n'
+        temp += ' # INGREDIENTS # \n'
+        for ingredient in self.ingredients:
+            text = self.readableIngredient(ingredient)
+            temp += '\t' + text + '\n'
+        temp += ' # INSTRUCTIONS # \n'
+        for instruction in self.instructions:
+            temp += '\t' + instruction + '\n'
+        return temp
+
+
+    @staticmethod
+    def readableIngredient(ingredient):
+        readable = ingredient['quantity']
+        if ingredient['unit']:
+            readable += ' ' + ingredient['unit']
+        readable += ' ' + ingredient['ingredient']
+        if ingredient['extra']:
+            readable += ' ' + ingredient['extra']
+        return readable
 
 
     @staticmethod
@@ -297,61 +231,43 @@ class Recipe(object):
         return string.strip()
 
 
+    # @TODO - change this to be more robust (make less assumptions about the)
+    #         numbers you are going to see... use regex?
     @staticmethod
-    def findParentheticals(string):
+    def transformDigits(ingredient):
+        digits = filter(str.isdigit, ingredient)
+        if len(digits) == 3:
+            quantity = digits[0] + ' ' + digits[1] + '/' + digits[2]
+            value = float(digits[0]) + (float(digits[1]) / float(digits[2]))
+            return quantity, value
+        elif len(digits) == 2:
+            quantity = digits[0] + '/' + digits[1]
+            value = float(digits[0]) / float(digits[1])
+            return quantity, value
+        elif len(digits) == 1:
+            return digits[0], float(digits[0])
+        return None, None
+
+
+    @staticmethod
+    def pluralize(value, string):
+        if float(value) > 1.0:
+            if string == 'foot':
+                return 'feet'
+            return string + 's'
+        return string
+
+
+    @classmethod
+    def findParentheticals(cls, string):
         if string.find('(') != -1 and string.find(')') != -1:
             paren = string[string.find('('):string.find(')')+1]
-            return paren, Recipe.removeToken(string, paren)
+            return paren, cls.removeToken(string, paren)
         return (None, string)
 
 
-    # TODO - change this and transformDigits so we can handle two digit numbers.
-    @staticmethod
-    def readableFractions(numer, denom):
-        intro = 'a' if int(numer) == 1 else str(numer) + ' '
-        fraction = ''
-        if denom == 2:
-            fraction = 'half'
-        elif denom == 3:
-            fraction = 'third'
-        elif denom == 4:
-            fraction = 'fourth'
-        elif denom == 5:
-            fraction = 'fifth'
-        elif denom == 6:
-            fraction = 'sixth'
-        elif denom == 7:
-            fraction = 'seventh'
-        elif denom == 8:
-            fraction = 'eighth'
-        elif denom == 9:
-            fraction = 'ninth'
-        elif denom == 10:
-            fraction = 'tenth'
-        plural = 's' if int(numer) != 1 else ''
-        return intro + fraction + plural
-
-
-    @staticmethod
-    def transformDigits(digits):
-        if len(digits) == 3:
-            quantity = digits[0] + ' ' + digits[1] + '/' + digits[2]
-            readable = digits[0] + ' and ' + Recipe.readableFractions(digits[1], digits[2])
-            value = float(digits[0]) + (float(digits[1]) / float(digits[2]))
-            return quantity, readable, value
-        elif len(digits) == 2:
-            quantity = digits[0] + '/' + digits[1]
-            readable = Recipe.readableFractions(digits[0], digits[1])
-            value = float(digits[0]) / float(digits[1])
-            return quantity, readable, value
-        elif len(digits) == 1:
-            readable = 'a' if int(digits[0]) == 1 else digits[0]
-            return digits[0], readable, float(digits[0])
-        return None, None, None
-
-
-    @staticmethod
-    def findUnit(quantity, value, string):
+    @classmethod
+    def findUnit(cls, quantity, value, string):
         words = string.split()
         unit = None
         if ' ' in quantity:
@@ -362,52 +278,201 @@ class Recipe(object):
             # assumes that finding fluid next to a number will always mean
             # that those two words following the number are the units.
             unit = 'fluid ' + words[unit_loc + 1]
-        unit = words[unit_loc] if unit is None else unit
-        if unit in Recipe.abbrevs:
-            for real, abbrev in Recipe.unit_types.iteritems():
+        else:
+            unit = words[unit_loc]
+        if unit in cls.abbrevs:
+            for real, abbrev in cls.unit_types.iteritems():
                 if unit in abbrev:
-                    unit = Recipe.pluralize(value, real)
-            return unit, Recipe.removeToken(Recipe.removeToken(string, unit), quantity)
-        return None, Recipe.removeToken(string, quantity)
-
-
-    @staticmethod
-    def pluralize(quantity, string):
-        if float(quantity) > 1.0:
-            if string == 'foot':
-                return 'feet'
-            return string + 's'
-        return string
+                    unit = cls.pluralize(value, real)
+            temp_string = cls.removeToken(string, unit)
+            return unit, cls.removeToken(temp_string, quantity)
+        return None, cls.removeToken(string, quantity)
 
 
     def parse(self):
         scrape = scrape_me(self.url)
         title = scrape.title()
         time = scrape.total_time()
-        instructions = [i for i in scrape.instructions().split('\n') if i is not '']
+        line_split_instructs = scrape.instructions().split('\n')
+        instructions = [i for i in line_split_instructs if i is not '']
         raw_ingredients = []
         for ingredient in scrape.ingredients():
-            paren, ingredient = Recipe.findParentheticals(ingredient)
-            quantity, readable, value = Recipe.transformDigits(filter(str.isdigit, ingredient))
+            processed_ingredient = dict.fromkeys(['quantity', 'value', 'unit',
+                                                  'ingredient', 'extra'], None)
+            extra, ingredient = Recipe.findParentheticals(ingredient)
+            quantity, value = Recipe.transformDigits(ingredient)
             unit, ingredient = Recipe.findUnit(quantity, value, ingredient)
-            if unit:
-                readable += ' ' + unit + ' ' + ingredient
-            else:
-                readable += ' ' + ingredient
-            if paren:
-                readable += ' ' + paren
-            raw_ingredients.append([readable, value, unit, ingredient, paren])
+            processed_ingredient['ingredient'] = ingredient
+            processed_ingredient['quantity'] = quantity
+            processed_ingredient['value'] = value
+            processed_ingredient['extra'] = extra
+            processed_ingredient['unit'] = unit
+            raw_ingredients.append(processed_ingredient)
         return title, time, instructions, raw_ingredients
 
+
+class Assistant(Listening):
+    START_EXAMPLES    = ['LETS GET STARTED', 'START']
+    NEXT_EXAMPLES     = ['NEXT', 'NEX', 'NEXTS', 'NEXT STEP', 'THEN', 'GO ON',
+                         'WHATS NEXT', 'CONTINUE', 'MORE', 'FORWARD', 'TEXT']
+    PREV_EXAMPLES     = ['PREVIOUS', 'GO BACK', 'GO BACKWARDS', 'GO BACKWARD',
+                         'LAST STEP', 'PRIOR', 'PREVIOUS STEP']
+    REPEAT_EXAMPLES   = ['AGAIN', 'REPEAT', 'SAY AGAIN', 'SAY IT AGAIN',
+                         'ONE MORE TIME']
+    QUANTITY_EXAMPLES = ['HOW MUCH', 'HOW MANY']
+
+
+    def __init__(self, url, wake_word):
+        super(Assistant, self).__init__()
+        self.wake_word = wake_word
+        self.recipe = Recipe(url)
+        self.current_step = 0
+        # https://gordonlesti.com/use-tkinter-without-mainloop/
+        # self.root = Tk()
+        # self.setupMaster()
+
+
+    def setupMaster(self):
+        self.root.title('Cooking Assistant')
+        header_font = ('Courier', 24)
+        default_font = ('Courier', 16)
+        header_text = 'Welcome to the Recipe Assistant'
+        main_label = Label(self.root, text = header_text, font = header_font)
+        input_label = Label(self.root, text = 'Input', font = default_font)
+        self.recipe_assistant_input = Text(self.root)
+        output_label = Label(self.root, text = 'Output', font = default_font)
+        self.recipe_assistant_output = Text(self.root)
+        text = 'Ingredients'
+        ingredient_label = Label(self.root, text = text, font = default_font)
+        self.ingredient_list = Text(self.root, borderwidth = 0, wrap = WORD,
+                                    font = default_font)
+        self.addIngredientsToGUI()
+        text = 'Instructions'
+        instruction_label = Label(self.root, text = text, font = default_font)
+        self.instruction_list = Text(self.root, borderwidth = 0, wrap = WORD,
+                                font = default_font)
+        self.addInstructionsToGUI()
+        main_label.grid(row = 0, column = 0, columnspan = 2)
+        input_label.grid(row = 1, column = 0)
+        output_label.grid(row = 1, column = 1)
+        self.recipe_assistant_input.grid(row = 2, column = 0)
+        self.recipe_assistant_output.grid(row = 2, column = 1)
+        # What about row 3?
+        ingredient_label.grid(row = 4, column = 0)
+        instruction_label.grid(row = 4, column = 1)
+        self.ingredient_list.grid(row = 5, column = 0)
+        self.instruction_list.grid(row = 5, column = 1)
+
+
+    def addIngredientsToGUI(self):
+        for ingredient in self.recipe.ingredients:
+            self.ingredient_list.insert(END, u'\u00B7', 'bullets')
+            pretty = self.recipe.readableIngredient(ingredient)
+            self.ingredient_list.insert(END, pretty)
+            self.ingredient_list.insert(END, '\n\n')
+
+
+    def addInstructionsToGUI(self):
+        for instruction in self.recipe.instructions:
+            self.instruction_list.insert(END, u'\u00B7', 'bullets')
+            self.instruction_list.insert(END, instruction)
+            self.instruction_list.insert(END, '\n\n')
+
+
+    @staticmethod
+    def speak(text):
+        # self.recipe_assistant_output.insert(END, text)
+        speaker = gTTS(text = text, lang = 'en', slow = False)
+        speaker.save(real_dirname() + '/tmp.mp3')
+        os.system('mpg321 -q ' + real_dirname() + '/tmp.mp3')
+
+
+    @staticmethod
+    def check_examples(transcript, examples):
+        found = False
+        for example in examples:
+            if lazy_regex_search(example, transcript):
+                found = True
+                break
+        return found
+
+
+    @classmethod
+    def checkAndSpeak(cls, transcript, examples, function):
+        if cls.check_examples(transcript, examples):
+            cls.speak(function(transcript))
+            return True
+        return False
+
+
+    def process_speech(self, transcript):
+        # self.recipe_assistant_input.insert(END, transcript)
+        # self.root.update()
+        if self.checkAndSpeak(transcript, self.START_EXAMPLES,
+                              self.start):
+            return
+        elif self.checkAndSpeak(transcript, self.NEXT_EXAMPLES,
+                                self.next_step):
+            return
+        elif self.checkAndSpeak(transcript, self.PREV_EXAMPLES,
+                                self.prev_step):
+            return
+        elif self.checkAndSpeak(transcript, self.REPEAT_EXAMPLES,
+                                self.repeat_step):
+            return
+        elif self.checkAndSpeak(transcript, self.QUANTITY_EXAMPLES,
+                                self.match_ingredients):
+            return
+        else:
+            self.speak('Sorry, I didn\'t understand.')
+        # self.root.update()
+
+
+    def config_and_start(self):
+        super(Assistant, self).config_and_start(self.wake_word)
+
+
+    def currentInstruction(self):
+        return self.recipe.instructions[self.current_step]
+
+
+    def start(self, *_):
+        if self.current_step == 0:
+            text = 'Today we will be cooking ' + self.recipe.title + '. '
+            text += 'To start, ' + self.currentInstruction()
+        else:
+            self.current_step = 0
+            text += 'Starting from the beginning, ' + self.currentInstruction()
+        return text
+
+
+    def next_step(self, *_):
+        self.current_step += 1
+        return self.currentInstruction()
+
+
+    def prev_step(self, *_):
+        self.current_step -= 1
+        return self.currentInstruction()
+
+
+    def repeat_step(self, *_):
+        return self.currentInstruction()
+
+
+    def match_ingredients(self, transcript):
+        for ingredient in self.recipe.ingredients:
+            if lazy_regex_search(ingredient['ingredient'].upper(), transcript):
+                return self.recipe.readableIngredient(ingredient)
+        return False
+
+
 def main():
-    # assist = Assistant()
-    # assist.config_and_start('GORDON')
-    url = 'https://www.allrecipes.com/recipe/260895/banana-poppy-seed-pancakes/?internalSource=popular&referringContentType=home%20page&clickId=cardslot%2038'
-    scrape = Recipe(url)
-    print scrape.title
-    print scrape.time
-    print scrape.ingredients
-    print scrape.instructions
+    url = 'https://www.allrecipes.com/recipe/260895/banana-poppy-seed-pancakes'
+    url += '/?internalSource=popular&referringContentType=home%20page&clickId='
+    url += 'cardslot%2038'
+    assist = Assistant(url, 'GORDON')
+    assist.config_and_start()
 
 
 if __name__ == '__main__':

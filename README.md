@@ -2,29 +2,14 @@
 
 ## TO-DO
 
-1. Speech (commands and utterances): [Wesley]
-	- continuously gather speech
-		* there is a streaming limit so test for length of stream allowed, if needed switch to the async version of google speech
-	- only output text heard from user (ignore tts output)
-	- clean up functions to only output a string of text for what was recognized, once per cycle (command response cycle)
-2. UI: [Nneoma]
-	- get setup with tKinter, make basic application window.
-		* ingredients list
-		* recipe list
-		* "text entry" - what was heard
-		* results (text from tts and other output)
-3. Data: [Sam]
-	- yummly (python library)
-	- bigoven api (meh...)
-4. Context: [Sam]
-	- convert recipes to some sort of finite state machine...
-	- work on representation of world state...
-5. QA:
-	- basic navigation (next/last etc)
+1. Context: [Sam]
+	- convert recipes to some sort of finite state machine
+	- work on representation of world state
+1. UI:
+	- integrate
+1. QA:
 	- basic step info (how much, how to)
 	- 2nd level/recursion ]-> how much of this, what about that
-
-*wake words?*
 
 ## SETUP
 
@@ -72,3 +57,12 @@
 + textToSpeech:
 	- google text to speech and python text to speech testers
 	- ggts_speech.mp3 is a side effect of the speech generation
++ scrapers:
+	- another copy of google auth
+	- demo files for UI
+	- scrape.py for formatting recipe_scrapers output
+		- scrape_command_line for command line testing
+	- scrape2.py for other testing <- not used
+	- recipe_scrapers comes from recipe-scraper-master which is a repo from github
+	- recipebook-master is another repo on github <- not used
+	- cookingMethods from Wikipedia
