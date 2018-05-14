@@ -15,7 +15,8 @@ RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
 # Google Speech recognition api key
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "assistants/googleAuth2.json"
+auth_dir_path = os.path.dirname(os.path.realpath(__file__))
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = auth_dir_path + "/googleAuth2.json"
 
 
 simple_recipe = ['get a glass', 'fill it with water', 'enjoy']
@@ -42,8 +43,8 @@ def listen_print_loop(responses):
                 break
             # DO FINAL ACTION HERE
             speaker = gTTS(text=simple_recipe.pop(0), lang='en', slow=False)
-            speaker.save("assistants/gtts_speech.mp3")
-            os.system("mpg321 -q assistants/gtts_speech.mp3")
+            speaker.save(auth_dir_path + "/gtts_speech.mp3")
+            os.system("mpg321 -q " + auth_dir_path + "/gtts_speech.mp3")
             # time.sleep(5)
             # END OF FINAL ACTION
             num_chars_printed = 0
