@@ -2,9 +2,6 @@
 
 ## TO-DO
 
-1. Context: [Sam]
-	- convert recipes to some sort of finite state machine
-	- work on representation of world state
 1. UI:
 	- integrate
 1. QA:
