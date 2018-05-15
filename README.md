@@ -2,21 +2,25 @@
 
 ## TO-DO
 
-1. UI:
+1. UI and Speech:
 	- test to verify audio is still real time
-1. QA:
-	- TODO list at bottom of Assistant class
-	- basic step info 
-		+ how much (done)
-		+ how to
-		+ what can I use instead
-	- 2nd level/recursion -> how much of this, what about that
-1. New Data:
+	- make sure you can work through whole recipe
+1. General TODOs (robust functions and private functions)
+1. New Data (descriptions/definitions):
 	- Methods (primary and secondary),
 	- Tools,
 	- measurement
 	- preparation
-1. General TODOs (robust functions and private functions)
+1. QA:
+	- TODO list at bottom of Assistant class
+		+ list all ingredients in step
+		+ list all ingredients
+		+ what is/how do you use
+		+ substitution
+		+ healthy/vegan/veggie subs
+		+ time (from instructions)
+		+ FINISH: how much (done, limit to step)
+	- 2nd level/recursion -> how much of this, what about that
 
 ## SETUP
 
