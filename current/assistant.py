@@ -11,6 +11,8 @@ from Tkinter import *
 import os
 # import re
 
+# @TODO - make some of the class/static functions private as needed
+
 
 def real_dirname():
     return os.path.dirname(os.path.realpath(__file__))
@@ -232,7 +234,7 @@ class Recipe(object):
 
 
     # @TODO - change this to be more robust (make less assumptions about the)
-    #         numbers you are going to see... use regex?
+    #         numbers you are going to see... use regex? \d+(\.\d*)?
     @staticmethod
     def transformDigits(ingredient):
         digits = filter(str.isdigit, ingredient)
@@ -332,6 +334,10 @@ class Assistant(Listening):
         # self.setupMaster()
 
 
+    def newRecipe(self, url):
+        self.recipe = Recipe(url)
+
+
     def setupMaster(self):
         self.root.title('Cooking Assistant')
         header_font = ('Courier', 24)
@@ -382,9 +388,12 @@ class Assistant(Listening):
     @staticmethod
     def speak(text):
         # self.recipe_assistant_output.insert(END, text)
-        speaker = gTTS(text = text, lang = 'en', slow = False)
-        speaker.save(real_dirname() + '/tmp.mp3')
-        os.system('mpg321 -q ' + real_dirname() + '/tmp.mp3')
+        if text:
+            speaker = gTTS(text = text, lang = 'en', slow = False)
+            speaker.save(real_dirname() + '/tmp.mp3')
+            os.system('mpg321 -q ' + real_dirname() + '/tmp.mp3')
+        else:
+            print text, 'Nothing'
 
 
     @staticmethod
@@ -460,11 +469,18 @@ class Assistant(Listening):
         return self.currentInstruction()
 
 
+    # @TODO - Limit ingredient search to ingredients in this step
     def match_ingredients(self, transcript):
         for ingredient in self.recipe.ingredients:
             if lazy_regex_search(ingredient['ingredient'].upper(), transcript):
                 return self.recipe.readableIngredient(ingredient)
         return False
+
+    # @TODO - list all ingredients in step
+    # @TODO - list all (regardless)
+    # @TODO - what is/how do you use
+    # @TODO - substitution
+    # @TODO - healthy/vegan/veggie subs
 
 
 def main():
