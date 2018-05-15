@@ -7,8 +7,8 @@
 	- make sure you can work through whole recipe
 1. General TODOs (robust functions and private functions)
 1. New Data (descriptions/definitions):
-	- Methods (primary and secondary),
-	- Tools,
+	- methods (primary and secondary)
+	- tools
 	- measurement
 	- preparation
 1. QA:
