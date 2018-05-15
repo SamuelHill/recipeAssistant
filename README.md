@@ -7,10 +7,11 @@
 	- make sure you can work through whole recipe
 1. General TODOs (robust functions and private functions)
 1. New Data (descriptions/definitions):
-	- methods (primary and secondary)
-	- tools
-	- measurement
-	- preparation
+	- MANUAL: methods (primary)
+	- MANUAL: measurement
+	- MANUAL: preparation
+	- IGNORE (for now): methods (secondary)
+	- IGNORE (for now): tools
 1. QA:
 	- TODO list at bottom of Assistant class
 		+ list all ingredients in step
