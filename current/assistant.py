@@ -11,6 +11,8 @@ from six.moves import queue
 from Tkinter import *
 
 import os
+import sys
+import random
 # import re
 
 # @TODO - make some of the class/static functions private as needed
@@ -475,7 +477,7 @@ class Assistant(Listening):
                                 self.substitute_ingredients):
             return
         elif self.checkAndSpeak(transcript, self.TIME_EXAMPLES,
-                                self.length_of_step, True):
+                                self.time_of_step, True):
             return
         elif self.checkAndSpeak(transcript, self.LIST_ALL_EXAMPLES,
                                 self.list_all_ingredients):
@@ -574,7 +576,7 @@ class Assistant(Listening):
         return False
 
 
-    def get_ingredient(self, transcript):
+    def get_ingredients(self, transcript):
         for ingredient in self.recipe.ingredients:
             if lazy_regex_search(ingredient['ingredient'].upper(), transcript):
                 return ingredient
@@ -616,7 +618,7 @@ class Assistant(Listening):
         return recipe_ingredients
 
     def vegetarian_sub(self, *_):
-        recipe_ingredients = "For this recipe you will need: "
+        recipe_ingredients = "Here are the substitutions you will need: "
         for i in range(len(self.recipe.ingredients)):
             substituted = False
             curr_ingredient = self.recipe.ingredients[i]['ingredient']
@@ -631,7 +633,7 @@ class Assistant(Listening):
         return recipe_ingredients
 
     def vegan_sub(self, *_):
-        recipe_ingredients = "For this recipe you will need: "
+        recipe_ingredients = "Here are the substitutions you will need: "
         for i in range(len(self.recipe.ingredients)):
             substituted = False
             curr_ingredient = self.recipe.ingredients[i]['ingredient']
