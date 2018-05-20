@@ -6,13 +6,16 @@ from google.cloud.speech import types
 from gtts import gTTS
 from pyaudio import PyAudio, paContinue, paInt16
 from recipe_scrapers import scrape_me
+# from data import substitutions
 from six.moves import queue
 from Tkinter import *
+
 import os
 # import re
 
 # @TODO - make some of the class/static functions private as needed
 
+substitutions = []
 
 def real_dirname():
     return os.path.dirname(os.path.realpath(__file__))
@@ -322,6 +325,10 @@ class Assistant(Listening):
     REPEAT_EXAMPLES   = ['AGAIN', 'REPEAT', 'SAY AGAIN', 'SAY IT AGAIN',
                          'ONE MORE TIME']
     QUANTITY_EXAMPLES = ['HOW MUCH', 'HOW MANY']
+    SUBSTITUTION_EXAMPLES = ['SUBSTITUTE', 'SUBSTITUTION', 'REPLACEMENT', 'REPLACE', 'SWAP']
+    TIME_EXAMPLES = [["HOW LONG", "STEP"], ["HOW LONG", "CURRENT"], ["LENGTH", "STEP"], ["LENGTH", "CURRENT"],
+                     ["HOW MANY", "MINUTES", "STEP"], ["HOW MANY", "MINUTES", "CURRENT"], ["HOW MUCH", "TIME", "STEP"],
+                     ["HOW MUCH", "TIME", "CURRENT"]]
 
 
     def __init__(self, url, wake_word):
@@ -405,12 +412,30 @@ class Assistant(Listening):
                 break
         return found
 
+    @staticmethod
+    def check_examples_multiple(transcript, examples):
+        found = False
+        for example in examples:
+            for i in range(0, len(example)):
+                if not lazy_regex_search(example[i], transcript):
+                    continue
+                elif i == len(example) - 1:
+                    found = True
+                    break
+        return found
 
     @classmethod
-    def checkAndSpeak(cls, transcript, examples, function):
-        if cls.check_examples(transcript, examples):
-            cls.speak(function(transcript))
-            return True
+    def checkAndSpeak(cls, transcript, examples, function, multiple=None):
+        if multiple:
+            if cls.check_examples_multiple(transcript, examples):
+                cls.speak(function(transcript))
+                return True
+
+        else:
+            if cls.check_examples(transcript, examples):
+                cls.speak(function(transcript))
+                return True
+
         return False
 
 
@@ -432,6 +457,12 @@ class Assistant(Listening):
         elif self.checkAndSpeak(transcript, self.QUANTITY_EXAMPLES,
                                 self.match_ingredients):
             return
+        elif self.checkAndSpeak(transcript, self.SUBSTITUTION_EXAMPLES,
+                                self.substitute_ingredients):
+            return
+        # elif self.checkAndSpeak(transcript, self.TIME_EXAMPLES,
+        #                         self.length_of_step, True):
+        #     return
         else:
             self.speak('Sorry, I didn\'t understand.')
         # self.root.update()
@@ -469,12 +500,67 @@ class Assistant(Listening):
         return self.currentInstruction()
 
 
+    def time_of_step(self, *_):
+        instruction = self.currentInstruction().upper()
+
+        until = instruction.find("UNTIL")
+        if until:
+            return self.get_sentence(instruction, until)
+
+        minutes = instruction.find("MINUTES")
+
+        if minutes:
+            return self.get_sentence(instruction, minutes)
+
+        minute = instruction.find("MINUTE")
+        if minute:
+            return self.get_sentence(instruction, minute)
+        return "No time for step found"
+
+    def get_sentence(self, paragraph, index):
+        start = index - 1
+        end = index
+
+        while start > 0:
+            if paragraph[start] == '.' and (not paragraph[start + 1].isdigit()):
+                break
+            else:
+                start -= 1
+        while end < len(paragraph):
+            if end == len(paragraph) - 1:
+                break
+
+            if paragraph[end] == "." and (not paragraph[end + 1].isdigit()):
+                break
+            else:
+                end += 1
+
+        if start < 0:
+            start = 0
+
+        if end >= len(paragraph):
+            end = len(paragraph) - 1
+        return paragraph[start, end + 1]
+
+
+
+
+
+
     # @TODO - Limit ingredient search to ingredients in this step
     def match_ingredients(self, transcript):
         for ingredient in self.recipe.ingredients:
             if lazy_regex_search(ingredient['ingredient'].upper(), transcript):
                 return self.recipe.readableIngredient(ingredient)
         return False
+
+    def substitute_ingredients(self, transcript):
+        ingredient = self.match_ingredients(transcript)
+        if ingredient:
+            return "For" + substitutions[ingredient][0] + " of " + ingredient + " use " + substitutions[ingredient[1]]
+        else:
+            return "No substitutions found"
+    
 
     # @TODO - list all ingredients in step
     # @TODO - list all (regardless)
