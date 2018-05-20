@@ -14,7 +14,11 @@ import os
 # import re
 
 # @TODO - make some of the class/static functions private as needed
-
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/data')
+# DATA DICTS
+import preparations
+import vegan
+import vegetarian
 
 def real_dirname():
     return os.path.dirname(os.path.realpath(__file__))
@@ -333,6 +337,10 @@ class Assistant(Listening):
     LIST_ALL_EXAMPLES = ['LIST ALL INGREDIENTS', 'LIST ALL',
                          'WHAT INGREDIENTS DO I NEED', 'WHAT DO I NEED TO BUY']
     LIST_ALL_IN_STEP_EXAMPLES = ['WHAT DO I NEED FOR THIS STEP', 'FOR THIS STEP']
+    WHAT_IS_EXAMPLES = ['WHAT IS']
+    HOW_TO_USE_EXAMPLES = ['HOW DO YOU USE', 'HOW IS THAT USED']
+    VEGETARIAN_SUB_EXAMPLES = ['VEGETARIAN INGREDIENTS']
+    VEGAN_SUB_EXAMPLES = ['VEGAN INGREDIENTS']
 
 
 
@@ -475,6 +483,12 @@ class Assistant(Listening):
         elif self.checkAndSpeak(transcript, self.LIST_ALL_IN_STEP_EXAMPLES,
                                 self.list_all_ingredients_in_step):
             return
+        elif self.checkAndSpeak(transcript, self.VEGETARIAN_SUB_EXAMPLES,
+                            self.vegetarian_sub):
+            return  
+        elif self.checkAndSpeak(transcript, self.VEGAN_SUB_EXAMPLES,
+                            self.vegan_sub):
+            return 
         else:
             self.speak('Sorry, I didn\'t understand.')
         # self.root.update()
@@ -599,6 +613,36 @@ class Assistant(Listening):
         recipe_ingredients = "For this recipe you will need: "
         for ingredient in self.recipe.ingredients:
             recipe_ingredients += self.recipe.readableIngredient(ingredient) + ". "
+        return recipe_ingredients
+
+        def vegetarian_sub(self, *_):
+        recipe_ingredients = "For this recipe you will need: "
+        for i in range(len(self.recipe.ingredients)):
+            substituted = False
+            curr_ingredient = self.recipe.ingredients[i]['ingredient']
+            for category in vegetarian.nontype:
+                if curr_ingredient in vegetarian.nontype[category]:
+                    substitute = random.choice(vegetarian.rtype[category])
+                    recipe_ingredients += curr_ingredient + "has been substituted with " + substitute + ". "
+                    self.recipe.ingredients[i]['ingredient'] = substitute
+                    substituted = True
+            # if not substituted:
+            #     recipe_ingredients += self.recipe.readableIngredient(curr_ingredient)
+        return recipe_ingredients
+
+    def vegan_sub(self, *_):
+        recipe_ingredients = "For this recipe you will need: "
+        for i in range(len(self.recipe.ingredients)):
+            substituted = False
+            curr_ingredient = self.recipe.ingredients[i]['ingredient']
+            for category in vegan.nontype:
+                if curr_ingredient in vegan.nontype[category]:
+                    substitute = random.choice(vegan.rtype[category])
+                    recipe_ingredients += curr_ingredient + "has been substituted with " + substitute + ". "
+                    self.recipe.ingredients[i]['ingredient'] = substitute
+                    substituted = True
+            # if not substituted:
+            #     recipe_ingredients += self.recipe.readableIngredient(curr_ingredient)
         return recipe_ingredients
 
     # @TODO - what is/how do you use
