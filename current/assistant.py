@@ -81,7 +81,7 @@ class MicrophoneStream(object):
                 except queue.Empty:
                     break
             yield b''.join(data)
- 
+
 
 class Listening(ABCMeta('ABC', (), {})):
     # https://github.com/GoogleCloudPlatform/python-docs-samples/blob/
@@ -156,7 +156,7 @@ class Recipe(object):
     unit_types['kilogram']   = ['kg','kilogram','kilogramme',
                                 'kilograms','kilogrammes']
     # US CUSTOMARY (volume, weight)
-    unit_types['drop']         = ['drop','dr','gt','gtt','drops','drs'] 
+    unit_types['drop']         = ['drop','dr','gt','gtt','drops','drs']
     unit_types['smidgen']      = ['smidgen','smdg','smi']
     unit_types['pinch']        = ['pinch','pn','pinchs','pinches']
     unit_types['dash']         = ['dash','ds','dashes']
@@ -322,6 +322,9 @@ class Assistant(Listening):
     REPEAT_EXAMPLES   = ['AGAIN', 'REPEAT', 'SAY AGAIN', 'SAY IT AGAIN',
                          'ONE MORE TIME']
     QUANTITY_EXAMPLES = ['HOW MUCH', 'HOW MANY']
+    LIST_ALL_EXAMPLES = ['LIST ALL INGREDIENTS', 'LIST ALL',
+                         'WHAT INGREDIENTS DO I NEED', 'WHAT DO I NEED TO BUY']
+    LIST_ALL_IN_STEP_EXAMPLES = ['WHAT DO I NEED FOR THIS STEP', 'FOR THIS STEP']
 
 
     def __init__(self, url, wake_word):
@@ -432,6 +435,12 @@ class Assistant(Listening):
         elif self.checkAndSpeak(transcript, self.QUANTITY_EXAMPLES,
                                 self.match_ingredients):
             return
+        elif self.checkAndSpeak(transcript, self.LIST_ALL_EXAMPLES,
+                                self.list_all_ingredients):
+            return
+        elif self.checkAndSpeak(transcript, self.LIST_ALL_IN_STEP_EXAMPLES,
+                                self.list_all_ingredients_in_step):
+            return
         else:
             self.speak('Sorry, I didn\'t understand.')
         # self.root.update()
@@ -476,8 +485,26 @@ class Assistant(Listening):
                 return self.recipe.readableIngredient(ingredient)
         return False
 
-    # @TODO - list all ingredients in step
-    # @TODO - list all (regardless)
+    def find_ingredients_in_step(self, *_):
+        ingredients_in_step = []
+        current_step = self.currentInstruction()
+        for ingredient in self.recipe.ingredients:
+            if lazy_regex_search(ingredient['ingredient'].upper(), current_step.upper()):
+                ingredients_in_step.append(ingredient)
+        return ingredients_in_step
+
+    def list_all_ingredients_in_step(self, *_):
+        step_ingredients = "For this step you will need: "
+        for ingredient in self.find_ingredients_in_step():
+            step_ingredients += self.recipe.readableIngredient(ingredient) + ". "
+        return step_ingredients
+
+    def list_all_ingredients(self, *_):
+        recipe_ingredients = "For this recipe you will need: "
+        for ingredient in self.recipe.ingredients:
+            recipe_ingredients += self.recipe.readableIngredient(ingredient) + ". "
+        return recipe_ingredients
+
     # @TODO - what is/how do you use
     # @TODO - substitution
     # @TODO - healthy/vegan/veggie subs
