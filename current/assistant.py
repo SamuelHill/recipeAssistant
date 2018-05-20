@@ -615,7 +615,7 @@ class Assistant(Listening):
             recipe_ingredients += self.recipe.readableIngredient(ingredient) + ". "
         return recipe_ingredients
 
-        def vegetarian_sub(self, *_):
+    def vegetarian_sub(self, *_):
         recipe_ingredients = "For this recipe you will need: "
         for i in range(len(self.recipe.ingredients)):
             substituted = False
