@@ -6,7 +6,7 @@ from google.cloud.speech import types
 from gtts import gTTS
 from pyaudio import PyAudio, paContinue, paInt16
 from recipe_scrapers import scrape_me
-# from data import substitutions
+from data import substitutions
 from six.moves import queue
 from Tkinter import *
 
@@ -15,7 +15,6 @@ import os
 
 # @TODO - make some of the class/static functions private as needed
 
-substitutions = []
 
 def real_dirname():
     return os.path.dirname(os.path.realpath(__file__))
@@ -418,10 +417,10 @@ class Assistant(Listening):
         for example in examples:
             for i in range(0, len(example)):
                 if not lazy_regex_search(example[i], transcript):
-                    continue
+                    break
                 elif i == len(example) - 1:
                     found = True
-                    break
+                    return found
         return found
 
     @classmethod
@@ -460,9 +459,9 @@ class Assistant(Listening):
         elif self.checkAndSpeak(transcript, self.SUBSTITUTION_EXAMPLES,
                                 self.substitute_ingredients):
             return
-        # elif self.checkAndSpeak(transcript, self.TIME_EXAMPLES,
-        #                         self.length_of_step, True):
-        #     return
+        elif self.checkAndSpeak(transcript, self.TIME_EXAMPLES,
+                                self.length_of_step, True):
+            return
         else:
             self.speak('Sorry, I didn\'t understand.')
         # self.root.update()
@@ -521,7 +520,7 @@ class Assistant(Listening):
         start = index - 1
         end = index
 
-        while start > 0:
+        while start >= 0:
             if paragraph[start] == '.' and (not paragraph[start + 1].isdigit()):
                 break
             else:
@@ -529,7 +528,6 @@ class Assistant(Listening):
         while end < len(paragraph):
             if end == len(paragraph) - 1:
                 break
-
             if paragraph[end] == "." and (not paragraph[end + 1].isdigit()):
                 break
             else:
@@ -538,13 +536,7 @@ class Assistant(Listening):
         if start < 0:
             start = 0
 
-        if end >= len(paragraph):
-            end = len(paragraph) - 1
         return paragraph[start, end + 1]
-
-
-
-
 
 
     # @TODO - Limit ingredient search to ingredients in this step
@@ -554,10 +546,21 @@ class Assistant(Listening):
                 return self.recipe.readableIngredient(ingredient)
         return False
 
+    def get_ingredient(self, transcript):
+        for ingredient in self.recipe.ingredients:
+            if lazy_regex_search(ingredient['ingredient'].upper(), transcript):
+                return ingredient
+        return False
+
     def substitute_ingredients(self, transcript):
-        ingredient = self.match_ingredients(transcript)
+        ingredient = self.get_ingredients(transcript)
+        substitutions =[]
         if ingredient:
-            return "For" + substitutions[ingredient][0] + " of " + ingredient + " use " + substitutions[ingredient[1]]
+            try:
+                substitutions[ingredient]
+                return "For" + ingredient + " of " + ingredient + " use " + substitutions[ingredient]
+            except:
+                return "No substitutions found"
         else:
             return "No substitutions found"
     
