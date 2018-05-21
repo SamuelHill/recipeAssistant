@@ -18,7 +18,7 @@ import random
 # @TODO - make some of the class/static functions private as needed
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/data')
 # DATA DICTS
-import preparations
+from preparations import preparations
 import vegan
 import vegetarian
 
@@ -339,7 +339,7 @@ class Assistant(Listening):
     LIST_ALL_EXAMPLES = ['LIST ALL INGREDIENTS', 'LIST ALL',
                          'WHAT INGREDIENTS DO I NEED', 'WHAT DO I NEED TO BUY']
     LIST_ALL_IN_STEP_EXAMPLES = ['WHAT DO I NEED FOR THIS STEP', 'FOR THIS STEP']
-    WHAT_IS_EXAMPLES = ['WHAT IS']
+    WHAT_IS_EXAMPLES = ['WHAT IS', 'WHAT ARE']
     HOW_TO_USE_EXAMPLES = ['HOW DO YOU USE', 'HOW IS THAT USED']
     VEGETARIAN_SUB_EXAMPLES = ['VEGETARIAN INGREDIENTS']
     VEGAN_SUB_EXAMPLES = ['VEGAN INGREDIENTS']
@@ -491,6 +491,12 @@ class Assistant(Listening):
         elif self.checkAndSpeak(transcript, self.VEGAN_SUB_EXAMPLES,
                             self.vegan_sub):
             return 
+        elif self.checkAndSpeak(transcript, self.WHAT_IS_EXAMPLES,
+                                self.what_is):
+            return
+        elif self.checkAndSpeak(transcript, self.HOW_TO_USE_EXAMPLES,
+                                self.how_to_use):
+            return
         else:
             self.speak('Sorry, I didn\'t understand.')
         # self.root.update()
@@ -646,6 +652,20 @@ class Assistant(Listening):
             # if not substituted:
             #     recipe_ingredients += self.recipe.readableIngredient(curr_ingredient)
         return recipe_ingredients
+
+    #only have these working with preparations right now
+    def what_is(self, transcript, *_):
+        for key, value in preparations.iteritems():
+            if lazy_regex_search(key.upper(), transcript):
+                return value
+        return "I don't know"
+
+
+    def how_to_use(self, transcript, *_):
+        for key, value in preparations.iteritems():
+            if lazy_regex_search(key.upper(), transcript):
+                return value
+        return "I don't know"
 
     # @TODO - what is/how do you use
     # @TODO - substitution
