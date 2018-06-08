@@ -1,4 +1,8 @@
 from __future__ import division
+import os
+import re
+import sys
+import random
 from abc import ABCMeta, abstractmethod
 from google.cloud import speech
 from google.cloud.speech import enums
@@ -8,11 +12,14 @@ from pyaudio import PyAudio, paContinue, paInt16
 from recipe_scrapers import scrape_me
 from six.moves import queue
 from Tkinter import *
-import os
-# import re
+# DATA DICTS
+# sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/data')
+import data.preparations
+import data.vegan
+import data.vegetarian
+from data import substitutions
 
 # @TODO - make some of the class/static functions private as needed
-
 
 def real_dirname():
     return os.path.dirname(os.path.realpath(__file__))
@@ -81,8 +88,9 @@ class MicrophoneStream(object):
                 except queue.Empty:
                     break
             yield b''.join(data)
- 
 
+
+# https://github.com/GoogleCloudPlatform/python-docs-samples/issues/807
 class Listening(ABCMeta('ABC', (), {})):
     # https://github.com/GoogleCloudPlatform/python-docs-samples/blob/
     # speech-continuous/speech/cloud-client/transcribe_streaming_indefinite.py
@@ -101,11 +109,9 @@ class Listening(ABCMeta('ABC', (), {})):
         self._chunk = int(self._rate / 10)
         self.language_code = language_code
 
-
     @abstractmethod
     def process_speech(transcript):
         pass
-
 
     def config_and_start(self, wake_word):
         client = speech.SpeechClient()
@@ -123,22 +129,24 @@ class Listening(ABCMeta('ABC', (), {})):
             responses = client.streaming_recognize(streaming_config, requests)
             self._transcription_loop(responses, wake_word)
 
-
     def _transcription_loop(self, responses, wake_word):
         num_chars_printed = 0
-        for response in responses:
-            if not response.results:
-                continue
-            result = response.results[0]
-            if not result.alternatives:
-                continue
-            transcript = result.alternatives[0].transcript
-            # Only process responses if they have the wake word
-            if lazy_regex_search(wake_word, transcript):
-                if result.is_final:
-                    self.process_speech(transcript)
-                    if lazy_regex_search('QUIT', transcript):  # ask to quit
-                        break
+        if responses:
+            for response in responses:
+                if not response.results:
+                    continue
+                result = response.results[0]
+                if not result.alternatives:
+                    continue
+                transcript = result.alternatives[0].transcript
+                # Only process responses if they have the wake word
+                if lazy_regex_search(wake_word, transcript):
+                    if result.is_final:
+                        self.process_speech(transcript)
+                        if lazy_regex_search('QUIT', transcript):  # ask to quit
+                            break
+        else:
+            self.config_and_start(self.wake_word)
 
 
 class Recipe(object):
@@ -156,7 +164,7 @@ class Recipe(object):
     unit_types['kilogram']   = ['kg','kilogram','kilogramme',
                                 'kilograms','kilogrammes']
     # US CUSTOMARY (volume, weight)
-    unit_types['drop']         = ['drop','dr','gt','gtt','drops','drs'] 
+    unit_types['drop']         = ['drop','dr','gt','gtt','drops','drs']
     unit_types['smidgen']      = ['smidgen','smdg','smi']
     unit_types['pinch']        = ['pinch','pn','pinchs','pinches']
     unit_types['dash']         = ['dash','ds','dashes']
@@ -202,7 +210,6 @@ class Recipe(object):
         self.ingredients = ingredients
         # self.title = kwargs.get('title',random_holes())
 
-
     def __str__(self):
         temp = self.title + '\n'
         temp += 'Time: ' + str(self.time) + '\n'
@@ -215,7 +222,6 @@ class Recipe(object):
             temp += '\t' + instruction + '\n'
         return temp
 
-
     @staticmethod
     def readableIngredient(ingredient):
         readable = ingredient['quantity']
@@ -226,12 +232,10 @@ class Recipe(object):
             readable += ' ' + ingredient['extra']
         return readable
 
-
     @staticmethod
     def removeToken(string, token):
         string = string.replace(token, '')
         return string.strip()
-
 
     # @TODO - change this to be more robust (make less assumptions about the)
     #         numbers you are going to see... use regex? \d+(\.\d*)?
@@ -250,7 +254,6 @@ class Recipe(object):
             return digits[0], float(digits[0])
         return None, None
 
-
     @staticmethod
     def pluralize(value, string):
         if float(value) > 1.0:
@@ -259,14 +262,12 @@ class Recipe(object):
             return string + 's'
         return string
 
-
     @classmethod
     def findParentheticals(cls, string):
         if string.find('(') != -1 and string.find(')') != -1:
             paren = string[string.find('('):string.find(')')+1]
             return paren, cls.removeToken(string, paren)
         return (None, string)
-
 
     @classmethod
     def findUnit(cls, quantity, value, string):
@@ -289,7 +290,6 @@ class Recipe(object):
             temp_string = cls.removeToken(string, unit)
             return unit, cls.removeToken(temp_string, quantity)
         return None, cls.removeToken(string, quantity)
-
 
     def parse(self):
         scrape = scrape_me(self.url)
@@ -322,7 +322,17 @@ class Assistant(Listening):
     REPEAT_EXAMPLES   = ['AGAIN', 'REPEAT', 'SAY AGAIN', 'SAY IT AGAIN',
                          'ONE MORE TIME']
     QUANTITY_EXAMPLES = ['HOW MUCH', 'HOW MANY']
-
+    SUBSTITUTION_EXAMPLES = ['SUBSTITUTE', 'SUBSTITUTION', 'REPLACEMENT', 'REPLACE', 'SWAP']
+    TIME_EXAMPLES = [["HOW LONG", "STEP"], ["HOW LONG", "CURRENT"], ["LENGTH", "STEP"], ["LENGTH", "CURRENT"],
+                     ["HOW MANY", "MINUTES", "STEP"], ["HOW MANY", "MINUTES", "CURRENT"], ["HOW MUCH", "TIME", "STEP"],
+                     ["HOW MUCH", "TIME", "CURRENT"]]
+    LIST_ALL_EXAMPLES = ['LIST ALL INGREDIENTS', 'LIST ALL',
+                         'WHAT INGREDIENTS DO I NEED', 'WHAT DO I NEED TO BUY']
+    LIST_ALL_IN_STEP_EXAMPLES = ['WHAT DO I NEED FOR THIS STEP', 'FOR THIS STEP']
+    WHAT_IS_EXAMPLES = ['WHAT IS']
+    HOW_TO_USE_EXAMPLES = ['HOW DO YOU USE', 'HOW IS THAT USED']
+    VEGETARIAN_SUB_EXAMPLES = ['VEGETARIAN INGREDIENTS']
+    VEGAN_SUB_EXAMPLES = ['VEGAN INGREDIENTS']
 
     def __init__(self, url, wake_word):
         super(Assistant, self).__init__()
@@ -333,10 +343,8 @@ class Assistant(Listening):
         # self.root = Tk()
         # self.setupMaster()
 
-
     def newRecipe(self, url):
         self.recipe = Recipe(url)
-
 
     def setupMaster(self):
         self.root.title('Cooking Assistant')
@@ -369,7 +377,6 @@ class Assistant(Listening):
         self.ingredient_list.grid(row = 5, column = 0)
         self.instruction_list.grid(row = 5, column = 1)
 
-
     def addIngredientsToGUI(self):
         for ingredient in self.recipe.ingredients:
             self.ingredient_list.insert(END, u'\u00B7', 'bullets')
@@ -377,13 +384,11 @@ class Assistant(Listening):
             self.ingredient_list.insert(END, pretty)
             self.ingredient_list.insert(END, '\n\n')
 
-
     def addInstructionsToGUI(self):
         for instruction in self.recipe.instructions:
             self.instruction_list.insert(END, u'\u00B7', 'bullets')
             self.instruction_list.insert(END, instruction)
             self.instruction_list.insert(END, '\n\n')
-
 
     @staticmethod
     def speak(text):
@@ -395,7 +400,6 @@ class Assistant(Listening):
         else:
             print text, 'Nothing'
 
-
     @staticmethod
     def check_examples(transcript, examples):
         found = False
@@ -405,14 +409,29 @@ class Assistant(Listening):
                 break
         return found
 
+    @staticmethod
+    def check_examples_multiple(transcript, examples):
+        found = False
+        for example in examples:
+            for i in range(0, len(example)):
+                if not lazy_regex_search(example[i], transcript):
+                    break
+                elif i == len(example) - 1:
+                    found = True
+                    return found
+        return found
 
     @classmethod
-    def checkAndSpeak(cls, transcript, examples, function):
-        if cls.check_examples(transcript, examples):
-            cls.speak(function(transcript))
-            return True
+    def checkAndSpeak(cls, transcript, examples, function, multiple=None):
+        if multiple:
+            if cls.check_examples_multiple(transcript, examples):
+                cls.speak(function(transcript))
+                return True
+        else:
+            if cls.check_examples(transcript, examples):
+                cls.speak(function(transcript))
+                return True
         return False
-
 
     def process_speech(self, transcript):
         # self.recipe_assistant_input.insert(END, transcript)
@@ -432,18 +451,33 @@ class Assistant(Listening):
         elif self.checkAndSpeak(transcript, self.QUANTITY_EXAMPLES,
                                 self.match_ingredients):
             return
+        elif self.checkAndSpeak(transcript, self.SUBSTITUTION_EXAMPLES,
+                                self.substitute_ingredients):
+            return
+        elif self.checkAndSpeak(transcript, self.TIME_EXAMPLES,
+                                self.time_of_step, True):
+            return
+        elif self.checkAndSpeak(transcript, self.LIST_ALL_EXAMPLES,
+                                self.list_all_ingredients):
+            return
+        elif self.checkAndSpeak(transcript, self.LIST_ALL_IN_STEP_EXAMPLES,
+                                self.list_all_ingredients_in_step):
+            return
+        elif self.checkAndSpeak(transcript, self.VEGETARIAN_SUB_EXAMPLES,
+                            self.vegetarian_sub):
+            return  
+        elif self.checkAndSpeak(transcript, self.VEGAN_SUB_EXAMPLES,
+                            self.vegan_sub):
+            return 
         else:
             self.speak('Sorry, I didn\'t understand.')
         # self.root.update()
 
-
     def config_and_start(self):
         super(Assistant, self).config_and_start(self.wake_word)
 
-
     def currentInstruction(self):
         return self.recipe.instructions[self.current_step]
-
 
     def start(self, *_):
         if self.current_step == 0:
@@ -454,35 +488,122 @@ class Assistant(Listening):
             text += 'Starting from the beginning, ' + self.currentInstruction()
         return text
 
-
     def next_step(self, *_):
         self.current_step += 1
         return self.currentInstruction()
-
 
     def prev_step(self, *_):
         self.current_step -= 1
         return self.currentInstruction()
 
-
     def repeat_step(self, *_):
         return self.currentInstruction()
 
+    def time_of_step(self, *_):
+        instruction = self.currentInstruction().upper()
+        until = instruction.find("UNTIL")
+        if until:
+            return self.get_sentence(instruction, until)
+        minutes = instruction.find("MINUTES")
+        if minutes:
+            return self.get_sentence(instruction, minutes)
+        minute = instruction.find("MINUTE")
+        if minute:
+            return self.get_sentence(instruction, minute)
+        return "No time for step found"
 
-    # @TODO - Limit ingredient search to ingredients in this step
+    @staticmethod
+    def get_sentence(paragraph, index):
+        start = index - 1
+        end = index
+        while start >= 0:
+            if paragraph[start] == '.' and (not paragraph[start + 1].isdigit()):
+                break
+            else:
+                start -= 1
+        while end < len(paragraph):
+            if end == len(paragraph) - 1:
+                break
+            if paragraph[end] == "." and (not paragraph[end + 1].isdigit()):
+                break
+            else:
+                end += 1
+        if start < 0:
+            start = 0
+        return paragraph[start, end + 1]
+
     def match_ingredients(self, transcript):
         for ingredient in self.recipe.ingredients:
             if lazy_regex_search(ingredient['ingredient'].upper(), transcript):
                 return self.recipe.readableIngredient(ingredient)
         return False
 
-    # @TODO - list all ingredients in step
-    # @TODO - list all (regardless)
-    # @TODO - what is/how do you use
-    # @TODO - substitution
-    #       - saving modified recipes
-    # @TODO - healthy/vegan/veggie subs
-    # @TODO - time (from instructions)
+    def get_ingredients(self, transcript):
+        for ingredient in self.recipe.ingredients:
+            if lazy_regex_search(ingredient['ingredient'].upper(), transcript):
+                return ingredient
+        return False
+
+    def substitute_ingredients(self, transcript):
+        ingredient = self.get_ingredients(transcript)
+        if ingredient:
+            try:
+                substitutions[ingredient]
+                return "For" + ingredient + " of " + ingredient + " use " + substitutions[ingredient]
+            except:
+                return "No substitutions found"
+        else:
+            return "No substitutions found"
+
+    def find_ingredients_in_step(self, *_):
+        ingredients_in_step = []
+        current_step = self.currentInstruction().upper()
+        for ingredient in self.recipe.ingredients:
+            if lazy_regex_search(ingredient['ingredient'].upper(), current_step):
+                ingredients_in_step.append(ingredient)
+        return ingredients_in_step
+
+    def list_all_ingredients_in_step(self, *_):
+        step_ingredients = "For this step you will need: "
+        for ingredient in self.find_ingredients_in_step():
+            step_ingredients += self.recipe.readableIngredient(ingredient) + ". "
+        return step_ingredients
+
+    def list_all_ingredients(self, *_):
+        recipe_ingredients = "For this recipe you will need: "
+        for ingredient in self.recipe.ingredients:
+            recipe_ingredients += self.recipe.readableIngredient(ingredient) + ". "
+        return recipe_ingredients
+
+    def vegetarian_sub(self, *_):
+        recipe_ingredients = "Here are the substitutions you will need: "
+        for i in range(len(self.recipe.ingredients)):
+            substituted = False
+            curr_ingredient = self.recipe.ingredients[i]['ingredient']
+            for category in vegetarian.nontype:
+                if curr_ingredient in vegetarian.nontype[category]:
+                    substitute = random.choice(vegetarian.rtype[category])
+                    recipe_ingredients += curr_ingredient + "has been substituted with " + substitute + ". "
+                    self.recipe.ingredients[i]['ingredient'] = substitute
+                    substituted = True
+            # if not substituted:
+            #     recipe_ingredients += self.recipe.readableIngredient(curr_ingredient)
+        return recipe_ingredients
+
+    def vegan_sub(self, *_):
+        recipe_ingredients = "Here are the substitutions you will need: "
+        for i in range(len(self.recipe.ingredients)):
+            substituted = False
+            curr_ingredient = self.recipe.ingredients[i]['ingredient']
+            for category in vegan.nontype:
+                if curr_ingredient in vegan.nontype[category]:
+                    substitute = random.choice(vegan.rtype[category])
+                    recipe_ingredients += curr_ingredient + "has been substituted with " + substitute + ". "
+                    self.recipe.ingredients[i]['ingredient'] = substitute
+                    substituted = True
+            # if not substituted:
+            #     recipe_ingredients += self.recipe.readableIngredient(curr_ingredient)
+        return recipe_ingredients
 
 
 def main():
